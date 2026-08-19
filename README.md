@@ -25,10 +25,14 @@ Custom UI   Custom UI   Custom UI
 
 ## Status
 
-Foundation stage. `useBusiness`, `useProducts`, `useProduct`, and `useCategories`
-exist and are correctly wired end to end — but **the backend endpoints they call do
-not exist yet** (see [Backend contract](#backend-contract) below). This package
-defines the contract and is ready the moment those endpoints ship.
+Catalog stage. The read-side storefront API exists on the MerchForge backend and
+every endpoint below has been verified end to end against it with real data —
+business/store configuration, domain-scoped categories, product search, filtering,
+sorting, pagination, product detail, related products, and flexible product
+metadata.
+
+Not implemented anywhere yet: cart, checkout, orders, payments, customer accounts,
+reviews, wishlists, shipping, inventory, coupons.
 
 ## Install (local development)
 
@@ -83,9 +87,10 @@ need to share one with the rest of your app).
 import {
     MerchForgeProvider,
     useBusiness,
+    useCategories,
     useProducts,
     useProduct,
-    useCategories,
+    useRelatedProducts,
     MerchForgeApiError,
 } from "@merchforge/storefront-sdk";
 ```
@@ -93,11 +98,39 @@ import {
 | Export | Purpose |
 | --- | --- |
 | `MerchForgeProvider` | Establishes `apiUrl` + `businessId` for every hook below. Renders no UI. |
-| `useBusiness()` | Public info for the configured business. |
-| `useProducts(query?)` | Paginated product catalog. `query`: `{ page?, pageSize?, search?, category?, sortBy?, sortDescending? }`. |
-| `useProduct(id)` | A single product. |
-| `useCategories()` | Distinct category names for the business. |
+| `useBusiness()` | Store identity, configuration (currency, locale, logo, contact), and its domain. |
+| `useCategories()` | Categories available to this store, each with a per-business `productCount`. |
+| `useProducts(query?)` | Paginated catalog. `query`: `{ page?, pageSize?, search?, categoryId?, minPrice?, maxPrice?, sortBy?, sortDescending? }`. |
+| `useProduct(id)` | A single product, including `description` and `metadata`. |
+| `useRelatedProducts(id, limit?)` | Other products in the same category, excluding this one. |
 | `MerchForgeApiError` | The error type every hook's `error` field is guaranteed to be. |
+
+### Domains, categories, and metadata
+
+Every MerchForge business belongs to a **domain** (its vertical — Fashion,
+Restaurant, Electronics). Categories belong to a domain, and products reference a
+category, so a Fashion store's products can only use Fashion categories.
+`useBusiness().data.domain` is `null` for a store that has not selected one; such a
+store has no categories and therefore no products.
+
+Products carry a `metadata` object of vertical-specific attributes:
+
+```ts
+// fashion
+{ colors: ["Black", "White"], sizes: ["S", "M", "L"], material: "Cotton" }
+// restaurant
+{ ingredients: ["Cheese", "Tomato"], spicy: true }
+// electronics
+{ brand: "Sony", storage: "256GB", ram: "16GB" }
+```
+
+Its keys differ per vertical, so it is typed `Record<string, unknown>` and validated
+only as "an object" — asserting specific keys would reject valid products from a
+vertical this SDK version hadn't anticipated. Narrow before use:
+
+```tsx
+const colors = Array.isArray(product.metadata?.colors) ? product.metadata.colors : [];
+```
 
 All hooks return standard React Query state (`data`, `isLoading`, `isError`,
 `error`, ...) — nothing SDK-specific to learn there.
@@ -136,8 +169,10 @@ React Query hooks           (hooks/ — useQuery wrapping the API modules)
   regression test (`hooks/businessIsolation.test.tsx`), not just asserted here.
 - **Zod validates every response.** Backend DTOs are not exposed as-is; `types/` +
   `schemas/` define the intentional public storefront contract, which is narrower
-  than the backend's internal models (e.g. `Product.BusinessId`/`UpdatedAt` are
-  dropped — redundant/internal for a storefront).
+  than the backend's internal models (`Product.BusinessId` is redundant once every
+  request is business-scoped, and `UpdatedAt` is internal audit data — both dropped).
+  `metadata` is the deliberate exception: validated as an object but not against
+  fixed keys, since it is schemaless by design.
 - **One error shape.** `api/client.ts` installs a response interceptor that converts
   every failure into a `MerchForgeApiError` before it reaches a hook, so storefronts
   never handle raw Axios errors or the backend's wire format.
@@ -148,75 +183,108 @@ React Query hooks           (hooks/ — useQuery wrapping the API modules)
 
 ## Backend contract
 
-**None of the endpoints below exist on the MerchForge API yet.** This repo does not
-modify the backend — these are the routes the SDK is built against and that need to
-be implemented there.
+These endpoints exist on the MerchForge API. This repo does not modify the backend;
+they are documented here because the SDK is the contract between MerchForge and
+independent storefronts.
 
-Business ID is passed as a query parameter (not baked into the URL path) so it can
-later be made optional/inferred from the storefront's hostname without changing the
-route shape or any SDK code.
+`businessId` is a query parameter rather than part of the path, so hostname-based
+resolution can replace it later without changing any route shape or SDK function.
+It identifies which catalog to read — it is **not** authorization. These endpoints
+are anonymous and must only ever return publicly safe data.
 
-Conventions carried over from the rest of MerchForge: camelCase JSON, the existing
-`PagedResult<T>` shape (`items`/`page`/`pageSize`/`totalCount`/`totalPages`), UTC
-ISO-8601 datetimes, and the existing `ApiErrorResponse` shape
-(`type`/`code`/`message`/`traceId`/`errors?`) for error bodies.
+Conventions shared with the rest of MerchForge: camelCase JSON, the platform
+`PagedResult<T>` envelope (`items`/`page`/`pageSize`/`totalCount`/`totalPages`), UTC
+ISO-8601 datetimes, and the `ApiErrorResponse` shape
+(`type`/`code`/`message`/`traceId`/`errors?`) with `type` as a **string** enum
+(`Validation` | `Authentication` | `Authorization` | `NotFound` | `Conflict` |
+`Unexpected`).
 
-### `GET /api/Storefront/business?businessId={id}`
+| Endpoint | SDK function | Hook |
+| --- | --- | --- |
+| `GET /api/storefront/business` | `getBusiness` | `useBusiness()` |
+| `GET /api/storefront/categories` | `getCategories` | `useCategories()` |
+| `GET /api/storefront/products` | `getProducts` | `useProducts(query?)` |
+| `GET /api/storefront/products/{id}` | `getProduct` | `useProduct(id)` |
+| `GET /api/storefront/products/{id}/related` | `getRelatedProducts` | `useRelatedProducts(id, limit?)` |
+
+### `GET /api/storefront/business?businessId={id}`
 
 ```json
-{ "id": "guid", "name": "string" }
+{
+  "id": "guid",
+  "name": "string",
+  "description": "string | null",
+  "logoUrl": "string | null",
+  "currency": "USD",
+  "locale": "en-US",
+  "contactEmail": "string | null",
+  "contactPhone": "string | null",
+  "domain": { "id": "guid", "name": "Fashion", "slug": "fashion" }
+}
 ```
 
-Only `Business.Id`/`Business.Name` — no owner, member, or subscription info.
+`domain` is `null` when the business has not selected one. No owner, members,
+roles, subscription, or audit data is exposed.
 
-### `GET /api/Storefront/products?businessId={id}&page=&pageSize=&search=&category=&sortBy=&sortDescending=`
+### `GET /api/storefront/categories?businessId={id}`
 
-`sortBy` ∈ `CreatedAt | Title | Price` (same field set as `ProductSortField` in the
-dashboard API).
+```json
+[{ "id": "guid", "name": "Shoes", "slug": "shoes", "displayOrder": 1, "productCount": 2 }]
+```
+
+The active categories of this business's domain. `productCount` is scoped to this
+business, so a storefront can decide for itself whether to hide empty categories.
+
+### `GET /api/storefront/products`
+
+Query: `businessId`, `page`, `pageSize`, `search`, `categoryId`, `minPrice`,
+`maxPrice`, `sortBy` (`CreatedAt` | `Title` | `Price`), `sortDescending`.
 
 ```json
 {
   "items": [
     {
       "id": "guid",
-      "title": "string",
-      "description": "string",
-      "price": 0,
-      "category": "string",
+      "title": "Urban Sneakers",
+      "price": 120.0,
       "imageUrl": "string | null",
-      "createdAt": "2026-01-01T00:00:00Z"
+      "category": { "id": "guid", "name": "Shoes", "slug": "shoes" },
+      "metadata": { "colors": ["Black"], "sizes": ["41"] },
+      "createdAt": "2026-02-01T10:00:00Z"
     }
   ],
-  "page": 1,
-  "pageSize": 20,
-  "totalCount": 0,
-  "totalPages": 0
+  "page": 1, "pageSize": 20, "totalCount": 4, "totalPages": 1
 }
 ```
 
-### `GET /api/Storefront/products/{productId}?businessId={id}`
+List items carry `metadata` but not `description` — grids need metadata to render,
+while description is the large field. Filtering is by `categoryId`, not name: names
+are display values and are not unique across domains ("Accessories" exists under
+both Fashion and Electronics).
 
-Same shape as one item above. `404` if the product doesn't exist or doesn't belong
-to `businessId`.
+There is deliberately no "featured products" endpoint (no field backs it) and no
+separate "new products" or "products by category" routes — those are already
+`?sortBy=CreatedAt` and `?categoryId=`.
 
-### `GET /api/Storefront/categories?businessId={id}`
+### `GET /api/storefront/products/{productId}?businessId={id}`
 
-```json
-["Electronics", "Clothing"]
-```
+Same shape as a list item, plus `description`. Returns `404` if the product does not
+exist **or belongs to a different business** — the two are indistinguishable by
+design, so one storefront cannot probe another's catalog by id.
 
-There is no `Category` entity in MerchForge — `Product.Category` is a plain string
-column. This is the distinct values of that column for the business. If richer
-category data (id, image, description, product count) is ever needed, that requires
-a real `Category` table first; don't invent one just to satisfy this endpoint.
+### `GET /api/storefront/products/{productId}/related?businessId={id}&limit=4`
 
-### Also needed: CORS
+Array of list-shaped products in the same category, excluding this one. `limit`
+defaults to 4 and is clamped to 20. An empty array is a normal result; an unknown
+product id is a `404`.
 
-Each storefront's origin (dev and eventually production, per business domain) needs
-to be added to the API's CORS allow-list before a browser-based storefront can call
-these endpoints at all — confirmed while testing the example app here: requests to
-the real backend were correctly constructed but blocked by CORS since this SDK's
-example app's origin isn't allow-listed.
+### CORS
+
+The storefront API uses a dedicated anonymous, credential-free CORS policy that
+allows any origin, because independent storefronts deploy to origins MerchForge
+cannot know in advance. Storefronts do **not** need to be added to any allow-list.
+(The authenticated dashboard API keeps its separate credentialed allow-list policy.)
+
 
 ## Testing
 
@@ -228,9 +296,10 @@ npm run test:watch
 Vitest + `@testing-library/react`, focused on protecting the architecture rather
 than chasing coverage: provider configuration/validation, query key business
 scoping, business isolation across a runtime `businessId` change, product query
-parameter construction, response schema validation, and error normalization
-(`toMerchForgeApiError` across all three failure modes: structured backend error,
-unstructured-but-real HTTP response, and true network failure).
+parameter construction, response schema validation (including that metadata keeps
+its value types and that the old bare-string category shape is rejected), and error
+normalization (`toMerchForgeApiError` across all three failure modes: structured
+backend error, unstructured-but-real HTTP response, and true network failure).
 
 ## Example app
 
@@ -244,6 +313,7 @@ npm run build
 npm run dev --workspace example
 ```
 
-Since the Storefront endpoints don't exist on the backend yet, the example currently
-shows loading/empty states rather than real product data — that's expected until
-the backend contract above is implemented.
+It exercises every hook: store configuration, category filtering, sorted/paginated
+products with metadata, product detail, and related products. It needs the
+MerchForge API running and a `businessId` that has a domain selected — a business
+with no domain has no categories and therefore no products.
