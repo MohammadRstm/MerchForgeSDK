@@ -67,6 +67,23 @@ function isBackendApiErrorResponse(data: unknown): data is BackendApiErrorRespon
     );
 }
 
+function mapStatusToErrorType(status: number): MerchForgeErrorType {
+    switch (status) {
+        case 400:
+            return "Validation";
+        case 401:
+            return "Authentication";
+        case 403:
+            return "Authorization";
+        case 404:
+            return "NotFound";
+        case 409:
+            return "Conflict";
+        default:
+            return "Unexpected";
+    }
+}
+
 /**
  * Normalizes any error raised by the API client into a MerchForgeApiError. Installed
  * once as a response interceptor in api/client.ts, so every hook already receives
@@ -87,11 +104,24 @@ export function toMerchForgeApiError(error: unknown): MerchForgeApiError {
             });
         }
 
+        if (response) {
+            // The request reached the server and got a real HTTP response, just not
+            // in MerchForge's ApiErrorResponse shape — e.g. a 404 for a route that
+            // doesn't exist yet, or raw ASP.NET Core routing/framework output.
+            return new MerchForgeApiError({
+                type: mapStatusToErrorType(response.status),
+                code: "UNEXPECTED_RESPONSE",
+                message: `The MerchForge API responded with status ${response.status}.`,
+                status: response.status,
+            });
+        }
+
+        // No response at all: the request never reached the server (offline, CORS,
+        // DNS, timeout, etc.).
         return new MerchForgeApiError({
             type: "Network",
             code: "NETWORK_ERROR",
             message: "Unable to connect to the MerchForge API.",
-            status: response?.status,
         });
     }
 
