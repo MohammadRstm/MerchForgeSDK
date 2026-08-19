@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { z } from "zod";
 
 /**
  * Mirrors MerchForge's backend ErrorType enum. "Network" is an SDK-only addition for
@@ -130,4 +131,29 @@ export function toMerchForgeApiError(error: unknown): MerchForgeApiError {
         code: "UNKNOWN_ERROR",
         message: "An unexpected error occurred.",
     });
+}
+
+/**
+ * Parses a successful HTTP response body against its expected schema. A 200 OK with
+ * a shape the SDK doesn't recognize (a backend contract change, a bug, a proxy
+ * mangling the body) is still a failure a storefront needs to handle — so it's
+ * normalized into the same MerchForgeApiError shape as every other failure, instead
+ * of leaking a raw ZodError that bypasses the interceptor in api/client.ts entirely
+ * (parsing happens after the Axios request already resolved successfully).
+ */
+export function parseOrThrow<Schema extends z.ZodTypeAny>(
+    schema: Schema,
+    data: unknown
+): z.infer<Schema> {
+    const result = schema.safeParse(data);
+
+    if (!result.success) {
+        throw new MerchForgeApiError({
+            type: "Unexpected",
+            code: "INVALID_RESPONSE_SHAPE",
+            message: "The MerchForge API returned data in an unexpected shape.",
+        });
+    }
+
+    return result.data;
 }

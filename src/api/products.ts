@@ -1,4 +1,5 @@
 import type { AxiosInstance } from "axios";
+import { parseOrThrow } from "../errors/MerchForgeApiError";
 import { pagedResultSchema } from "../schemas/pagination";
 import { productSchema } from "../schemas/product";
 import type { PagedResult } from "../types/pagination";
@@ -21,7 +22,7 @@ export async function getProducts(
         params: { businessId, ...query },
     });
 
-    return productsPageSchema.parse(data);
+    return parseOrThrow(productsPageSchema, data);
 }
 
 /**
@@ -39,5 +40,5 @@ export async function getProduct(
         params: { businessId },
     });
 
-    return productSchema.parse(data);
+    return parseOrThrow(productSchema, data);
 }

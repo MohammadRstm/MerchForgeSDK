@@ -1,4 +1,5 @@
 import type { AxiosInstance } from "axios";
+import { parseOrThrow } from "../errors/MerchForgeApiError";
 import { categoriesSchema } from "../schemas/category";
 import type { Category } from "../types/category";
 
@@ -17,5 +18,5 @@ export async function getCategories(
         params: { businessId },
     });
 
-    return categoriesSchema.parse(data);
+    return parseOrThrow(categoriesSchema, data);
 }
