@@ -1,0 +1,23 @@
+// Public SDK surface. Internal files (api/client, context internals, etc.) are
+// intentionally not exported — storefronts should never import from
+// "@merchforge/storefront-sdk/src/...".
+
+export { MerchForgeProvider } from "./context/MerchForgeProvider";
+export type { MerchForgeProviderProps } from "./context/MerchForgeProvider";
+export type { MerchForgeConfig } from "./context/MerchForgeContext";
+
+export { useBusiness } from "./hooks/useBusiness";
+export { useProducts } from "./hooks/useProducts";
+export { useProduct } from "./hooks/useProduct";
+export { useCategories } from "./hooks/useCategories";
+
+export type { Business } from "./types/business";
+export type { Product, ProductsQuery, ProductSortField } from "./types/product";
+export type { Category } from "./types/category";
+export type { PagedResult, PagedQuery } from "./types/pagination";
+
+export { MerchForgeApiError } from "./errors/MerchForgeApiError";
+export type {
+    MerchForgeApiErrorDetails,
+    MerchForgeErrorType,
+} from "./errors/MerchForgeApiError";
