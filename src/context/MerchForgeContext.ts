@@ -1,19 +1,19 @@
 import { createContext } from "react";
+import type { AxiosInstance } from "axios";
 
-/**
- * SDK-wide configuration established once at the application boundary by
- * <MerchForgeProvider>. Every hook reads this instead of taking apiUrl/businessId
- * as arguments.
- */
 export interface MerchForgeConfig {
-    /** Base URL of the MerchForge API, e.g. "https://localhost:7021/api". */
     apiUrl: string;
-    /**
-     * The business this storefront belongs to. Passed explicitly for now; a future
-     * version may resolve this from the storefront's hostname instead, which is why
-     * it's plumbed through context rather than a module-level constant.
-     */
     businessId: string;
 }
 
-export const MerchForgeContext = createContext<MerchForgeConfig | null>(null);
+/**
+ * Internal context value — same as the public MerchForgeConfig, plus the shared
+ * Axios client. Not exported: consumers only ever see MerchForgeConfig, since the
+ * client is an implementation detail of api/client.ts, not part of the SDK's public
+ * surface.
+ */
+export interface MerchForgeContextValue extends MerchForgeConfig {
+    client: AxiosInstance;
+}
+
+export const MerchForgeContext = createContext<MerchForgeContextValue | null>(null);
