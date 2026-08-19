@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCategories } from "../api/categories";
 import { useApiClient } from "../api/client";
+import type { Category } from "../types/category";
+import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
 import { merchForgeQueryKeys } from "./queryKeys";
 
 /**
@@ -9,7 +11,7 @@ import { merchForgeQueryKeys } from "./queryKeys";
 export function useCategories() {
     const { client, businessId } = useApiClient();
 
-    return useQuery({
+    return useQuery<Category[], MerchForgeApiError>({
         queryKey: merchForgeQueryKeys.categories(businessId),
         queryFn: () => getCategories(client, businessId),
     });

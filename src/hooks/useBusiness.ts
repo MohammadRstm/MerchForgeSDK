@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { getBusiness } from "../api/business";
 import { useApiClient } from "../api/client";
+import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
+import type { Business } from "../types/business";
 import { merchForgeQueryKeys } from "./queryKeys";
 
 /**
@@ -9,7 +11,7 @@ import { merchForgeQueryKeys } from "./queryKeys";
 export function useBusiness() {
     const { client, businessId } = useApiClient();
 
-    return useQuery({
+    return useQuery<Business, MerchForgeApiError>({
         queryKey: merchForgeQueryKeys.business(businessId),
         queryFn: () => getBusiness(client, businessId),
     });

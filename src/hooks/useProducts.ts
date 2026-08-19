@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../api/products";
 import { useApiClient } from "../api/client";
-import type { ProductsQuery } from "../types/product";
+import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
+import type { PagedResult } from "../types/pagination";
+import type { Product, ProductsQuery } from "../types/product";
 import { merchForgeQueryKeys } from "./queryKeys";
 
 /**
@@ -13,7 +15,7 @@ import { merchForgeQueryKeys } from "./queryKeys";
 export function useProducts(query: ProductsQuery = {}) {
     const { client, businessId } = useApiClient();
 
-    return useQuery({
+    return useQuery<PagedResult<Product>, MerchForgeApiError>({
         queryKey: merchForgeQueryKeys.products(businessId, query),
         queryFn: () => getProducts(client, businessId, query),
     });
