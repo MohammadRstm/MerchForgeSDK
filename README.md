@@ -129,7 +129,11 @@ React Query hooks           (hooks/ — useQuery wrapping the API modules)
   never share connection state.
 - **Query keys are business-scoped.** Every key is `["merchforge", businessId, ...]`.
   Never `["products"]` alone — that would let cached data leak across businesses if
-  a `businessId` ever changes at runtime.
+  a `businessId` ever changes at runtime. Concretely: if the `businessId` prop passed
+  to `<MerchForgeProvider>` changes without unmounting, React Query treats it as a
+  disjoint set of cache entries (different key = different entry), so a stale
+  business's data can never be returned under a new business's key — proven by a
+  regression test (`hooks/businessIsolation.test.tsx`), not just asserted here.
 - **Zod validates every response.** Backend DTOs are not exposed as-is; `types/` +
   `schemas/` define the intentional public storefront contract, which is narrower
   than the backend's internal models (e.g. `Product.BusinessId`/`UpdatedAt` are
@@ -213,6 +217,20 @@ to be added to the API's CORS allow-list before a browser-based storefront can c
 these endpoints at all — confirmed while testing the example app here: requests to
 the real backend were correctly constructed but blocked by CORS since this SDK's
 example app's origin isn't allow-listed.
+
+## Testing
+
+```bash
+npm test          # run once
+npm run test:watch
+```
+
+Vitest + `@testing-library/react`, focused on protecting the architecture rather
+than chasing coverage: provider configuration/validation, query key business
+scoping, business isolation across a runtime `businessId` change, product query
+parameter construction, response schema validation, and error normalization
+(`toMerchForgeApiError` across all three failure modes: structured backend error,
+unstructured-but-real HTTP response, and true network failure).
 
 ## Example app
 
