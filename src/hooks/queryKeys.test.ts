@@ -28,6 +28,28 @@ describe("merchForgeQueryKeys", () => {
         expect(withSearch).not.toEqual(withPage);
     });
 
+    it("scopes related-product keys by business, product, and limit", () => {
+        expect(merchForgeQueryKeys.relatedProducts("biz-a", "p1", 4)).toEqual([
+            "merchforge", "biz-a", "products", "p1", "related", 4,
+        ]);
+
+        // Different business, same product id — must not collide.
+        expect(merchForgeQueryKeys.relatedProducts("biz-a", "p1", 4)).not.toEqual(
+            merchForgeQueryKeys.relatedProducts("biz-b", "p1", 4)
+        );
+
+        // A different limit is a different result set, so a different cache entry.
+        expect(merchForgeQueryKeys.relatedProducts("biz-a", "p1", 4)).not.toEqual(
+            merchForgeQueryKeys.relatedProducts("biz-a", "p1", 8)
+        );
+    });
+
+    it("keeps a product's detail key distinct from its related-products key", () => {
+        expect(merchForgeQueryKeys.product("biz-a", "p1")).not.toEqual(
+            merchForgeQueryKeys.relatedProducts("biz-a", "p1")
+        );
+    });
+
     it("all resources share the merchforge namespace prefix", () => {
         expect(merchForgeQueryKeys.business("biz-a")[0]).toBe("merchforge");
         expect(merchForgeQueryKeys.products("biz-a")[0]).toBe("merchforge");

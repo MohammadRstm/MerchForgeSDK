@@ -6,7 +6,8 @@ import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
 import { merchForgeQueryKeys } from "./queryKeys";
 
 /**
- * Distinct product categories for the business configured on <MerchForgeProvider>.
+ * Categories available to the business configured on <MerchForgeProvider>, each with
+ * the number of products that business has in it.
  */
 export function useCategories() {
     const { client, businessId } = useApiClient();

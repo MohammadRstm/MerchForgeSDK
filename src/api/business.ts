@@ -4,16 +4,13 @@ import { businessSchema } from "../schemas/business";
 import type { Business } from "../types/business";
 
 /**
- * GET /Storefront/business?businessId=...
- *
- * NOTE: this endpoint does not exist on the MerchForge backend yet. See the SDK
- * README's "Backend contract" section for the expected request/response shape.
+ * GET /storefront/business?businessId=...
  */
 export async function getBusiness(
     client: AxiosInstance,
     businessId: string
 ): Promise<Business> {
-    const { data } = await client.get("/Storefront/business", {
+    const { data } = await client.get("/storefront/business", {
         params: { businessId },
     });
 

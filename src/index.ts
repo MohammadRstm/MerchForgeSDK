@@ -9,10 +9,19 @@ export type { MerchForgeConfig } from "./context/MerchForgeContext";
 export { useBusiness } from "./hooks/useBusiness";
 export { useProducts } from "./hooks/useProducts";
 export { useProduct } from "./hooks/useProduct";
+export { useRelatedProducts } from "./hooks/useRelatedProducts";
 export { useCategories } from "./hooks/useCategories";
 
 export type { Business } from "./types/business";
-export type { Product, ProductsQuery, ProductSortField } from "./types/product";
+export type { Domain } from "./types/domain";
+export type {
+    Product,
+    ProductDetail,
+    ProductCategory,
+    ProductMetadata,
+    ProductsQuery,
+    ProductSortField,
+} from "./types/product";
 export type { Category } from "./types/category";
 export type { PagedResult, PagedQuery } from "./types/pagination";
 

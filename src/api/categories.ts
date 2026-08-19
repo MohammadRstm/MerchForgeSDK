@@ -4,17 +4,16 @@ import { categoriesSchema } from "../schemas/category";
 import type { Category } from "../types/category";
 
 /**
- * GET /Storefront/categories?businessId=...
+ * GET /storefront/categories?businessId=...
  *
- * NOTE: this endpoint does not exist on the MerchForge backend yet — there isn't
- * even a Category entity, only the distinct values of Product.Category. See the SDK
- * README's "Backend contract" section for the expected request/response shape.
+ * Returns the active categories of this business's domain, each with the number of
+ * products this business has in it. Empty for a business with no domain selected.
  */
 export async function getCategories(
     client: AxiosInstance,
     businessId: string
 ): Promise<Category[]> {
-    const { data } = await client.get("/Storefront/categories", {
+    const { data } = await client.get("/storefront/categories", {
         params: { businessId },
     });
 

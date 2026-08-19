@@ -17,6 +17,9 @@ export const merchForgeQueryKeys = {
     product: (businessId: string, productId: string) =>
         ["merchforge", businessId, "products", productId] as const,
 
+    relatedProducts: (businessId: string, productId: string, limit?: number) =>
+        ["merchforge", businessId, "products", productId, "related", limit] as const,
+
     categories: (businessId: string) =>
         ["merchforge", businessId, "categories"] as const,
 };
