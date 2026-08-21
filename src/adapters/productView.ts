@@ -90,3 +90,17 @@ export function isSaleActive(product: Product): boolean {
 export function getMetadataValue<T = unknown>(product: Product, key: string): T | undefined {
     return product.metadata?.[key] as T | undefined;
 }
+
+/**
+ * Product and business images come back as paths relative to the API origin (e.g.
+ * `/product-images/{businessId}/{file}.jpg`), not full URLs — every template needs
+ * the same "make this renderable in an `<img src>`" step, unlike the field mapping
+ * above, which is genuinely template-specific. An already-absolute URL (a business
+ * that stores images on a CDN instead) is returned unchanged rather than mangled.
+ */
+export function resolveImageUrl(url: string | null | undefined, apiUrl: string): string | null {
+    if (!url) return null;
+    if (/^https?:\/\//i.test(url)) return url;
+
+    return `${apiUrl.replace(/\/+$/, "")}/${url.replace(/^\/+/, "")}`;
+}

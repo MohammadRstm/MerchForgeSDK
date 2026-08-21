@@ -6,6 +6,7 @@ import {
     getMetadataValue,
     getStockStatus,
     isSaleActive,
+    resolveImageUrl,
 } from "./productView";
 import type { Product, ProductImage } from "../types/product";
 
@@ -112,5 +113,30 @@ describe("getMetadataValue", () => {
 
     it("returns undefined when metadata is null", () => {
         expect(getMetadataValue(product(), "material")).toBeUndefined();
+    });
+});
+
+describe("resolveImageUrl", () => {
+    it("prefixes a relative path with the API origin", () => {
+        expect(resolveImageUrl("/product-images/biz/a.jpg", "https://api.example.com")).toBe(
+            "https://api.example.com/product-images/biz/a.jpg"
+        );
+    });
+
+    it("doesn't double up slashes at the join point", () => {
+        expect(resolveImageUrl("/product-images/biz/a.jpg", "https://api.example.com/")).toBe(
+            "https://api.example.com/product-images/biz/a.jpg"
+        );
+    });
+
+    it("returns an already-absolute URL unchanged", () => {
+        expect(resolveImageUrl("https://cdn.example.com/a.jpg", "https://api.example.com")).toBe(
+            "https://cdn.example.com/a.jpg"
+        );
+    });
+
+    it("returns null for a null or empty url", () => {
+        expect(resolveImageUrl(null, "https://api.example.com")).toBeNull();
+        expect(resolveImageUrl("", "https://api.example.com")).toBeNull();
     });
 });

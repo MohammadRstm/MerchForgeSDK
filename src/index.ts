@@ -33,6 +33,7 @@ export {
     getStockStatus,
     isSaleActive,
     getMetadataValue,
+    resolveImageUrl,
 } from "./adapters/productView";
 export type { StockStatus } from "./adapters/productView";
 
