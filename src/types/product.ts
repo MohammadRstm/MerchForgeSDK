@@ -23,6 +23,18 @@ export interface ProductCategory {
  */
 export type ProductMetadata = Record<string, unknown>;
 
+/** One image in a product's gallery. Exactly one entry per product has `isMain: true`. */
+export interface ProductImage {
+    id: string;
+    url: string;
+    isMain: boolean;
+    width: number | null;
+    height: number | null;
+    altText: string | null;
+    /** Display order, lowest first. Not guaranteed contiguous. */
+    displayOrder: number;
+}
+
 /**
  * A product as it appears in a catalog listing.
  *
@@ -34,7 +46,19 @@ export interface Product {
     id: string;
     title: string;
     price: number;
+    /** Pre-discount price for a struck-through sale display. Null when not on sale. */
+    compareAtPrice: number | null;
+    /** The main image's URL — kept in sync with `images`, for a consumer that only needs one image. */
     imageUrl: string | null;
+    /** The full gallery, already sorted for display. Empty for a product with no images. */
+    images: ProductImage[];
+    sku: string | null;
+    /** Null means inventory isn't tracked for this product; 0 means tracked and out of stock. */
+    stockQuantity: number | null;
+    /** Freeform merchandising badges, e.g. "New", "Bestseller". Never null; empty when none. */
+    tags: string[];
+    /** When a time-limited sale on this product ends, for a countdown display. Null if none. */
+    saleEndsAt: string | null;
     category: ProductCategory;
     metadata: ProductMetadata | null;
     createdAt: string;

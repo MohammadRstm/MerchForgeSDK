@@ -18,12 +18,23 @@ export type {
     Product,
     ProductDetail,
     ProductCategory,
+    ProductImage,
     ProductMetadata,
     ProductsQuery,
     ProductSortField,
 } from "./types/product";
 export type { Category } from "./types/category";
 export type { PagedResult, PagedQuery } from "./types/pagination";
+
+export {
+    getMainImage,
+    getGalleryImages,
+    getDiscountPercent,
+    getStockStatus,
+    isSaleActive,
+    getMetadataValue,
+} from "./adapters/productView";
+export type { StockStatus } from "./adapters/productView";
 
 export { MerchForgeApiError } from "./errors/MerchForgeApiError";
 export type {

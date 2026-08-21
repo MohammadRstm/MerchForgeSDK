@@ -13,11 +13,27 @@ const validCategory = {
     slug: "shoes",
 };
 
+const validImage = {
+    id: "d4f1b1b0-0000-4000-8000-000000000001",
+    url: "/images/sneakers-main.jpg",
+    isMain: true,
+    width: 800,
+    height: 600,
+    altText: null,
+    displayOrder: 0,
+};
+
 const validProduct = {
     id: "b3f1b1b0-0000-4000-8000-000000000001",
     title: "Urban Sneakers",
     price: 120,
-    imageUrl: null,
+    compareAtPrice: null,
+    imageUrl: "/images/sneakers-main.jpg",
+    images: [validImage],
+    sku: null,
+    stockQuantity: null,
+    tags: [],
+    saleEndsAt: null,
     category: validCategory,
     metadata: { colors: ["Black", "White"], sizes: ["40", "41"], waterproof: true },
     createdAt: "2026-02-01T10:00:00Z",
