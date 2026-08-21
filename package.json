@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Shared data/business layer for independent MerchForge storefront applications.",
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": false,
   "sideEffects": false,
   "files": [
