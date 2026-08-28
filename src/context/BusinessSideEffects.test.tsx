@@ -48,10 +48,10 @@ vi.mock("../api/business", () => ({
     ),
 }));
 
-function renderWithContext() {
+function renderWithContext(apiUrl: string) {
     const queryClient = new QueryClient();
     const contextValue: MerchForgeContextValue = {
-        apiUrl: "https://api.example.com",
+        apiUrl,
         businessId: "b1",
         previewToken: null,
         client: {} as MerchForgeContextValue["client"],
@@ -60,7 +60,7 @@ function renderWithContext() {
     return render(
         <MerchForgeContext.Provider value={contextValue}>
             <QueryClientProvider client={queryClient}>
-                <BusinessSideEffects apiUrl="https://api.example.com" />
+                <BusinessSideEffects apiUrl={apiUrl} />
             </QueryClientProvider>
         </MerchForgeContext.Provider>
     );
@@ -68,15 +68,28 @@ function renderWithContext() {
 
 describe("BusinessSideEffects", () => {
     it("sets the --primary CSS variable from the business's primaryColor", async () => {
-        renderWithContext();
+        renderWithContext("https://api.example.com/api");
 
         await waitFor(() =>
             expect(document.documentElement.style.getPropertyValue("--primary")).toBe("#ff0000")
         );
     });
 
-    it("sets the favicon link href, resolved against apiUrl", async () => {
-        renderWithContext();
+    it("resolves the favicon against the origin, not apiUrl — uploaded images are static files served from the origin root, not under /api", async () => {
+        // Every real template's env.ts derives apiUrl as `${origin}/api` — this is the
+        // shape that must resolve correctly, not an already-bare origin (regression
+        // test for a real bug: BusinessSideEffects originally resolved the favicon
+        // against apiUrl directly, producing a ".../api/uploads/..." URL that 404s).
+        renderWithContext("https://api.example.com/api");
+
+        await waitFor(() => {
+            const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+            expect(link?.getAttribute("href")).toBe("https://api.example.com/uploads/favicon.ico");
+        });
+    });
+
+    it("leaves an already-bare origin (no /api suffix) unchanged", async () => {
+        renderWithContext("https://api.example.com");
 
         await waitFor(() => {
             const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');

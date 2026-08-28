@@ -13,6 +13,12 @@ import { useBusiness } from "../hooks/useBusiness";
 export function BusinessSideEffects({ apiUrl }: { apiUrl: string }) {
     const { data: business } = useBusiness();
 
+    // Uploaded images are static files served from the API's own origin, not under
+    // /api (see resolveImageUrl's own doc comment and every template's env.ts,
+    // which derive apiUrl as `${origin}/api` for exactly this reason) — passing
+    // apiUrl itself here would produce a URL like ".../api/uploads/..." that 404s.
+    const assetOrigin = apiUrl.replace(/\/api\/?$/, "");
+
     useEffect(() => {
         if (!business?.primaryColor) {
             return;
@@ -22,7 +28,7 @@ export function BusinessSideEffects({ apiUrl }: { apiUrl: string }) {
     }, [business?.primaryColor]);
 
     useEffect(() => {
-        const faviconUrl = resolveImageUrl(business?.faviconUrl, apiUrl);
+        const faviconUrl = resolveImageUrl(business?.faviconUrl, assetOrigin);
 
         if (!faviconUrl) {
             return;
@@ -37,7 +43,7 @@ export function BusinessSideEffects({ apiUrl }: { apiUrl: string }) {
         }
 
         link.href = faviconUrl;
-    }, [business?.faviconUrl, apiUrl]);
+    }, [business?.faviconUrl, assetOrigin]);
 
     return null;
 }
