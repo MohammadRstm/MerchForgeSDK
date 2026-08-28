@@ -31,7 +31,11 @@ export function createApiClient(apiUrl: string): AxiosInstance {
  * current business context. Not part of the public API — storefronts consume
  * useBusiness/useProducts/useProduct/useCategories instead.
  */
-export function useApiClient(): { client: AxiosInstance; businessId: string } {
+export function useApiClient(): {
+    client: AxiosInstance;
+    businessId: string;
+    previewToken: string | null;
+} {
     const context = useContext(MerchForgeContext);
 
     if (!context) {
@@ -40,5 +44,5 @@ export function useApiClient(): { client: AxiosInstance; businessId: string } {
         );
     }
 
-    return { client: context.client, businessId: context.businessId };
+    return { client: context.client, businessId: context.businessId, previewToken: context.previewToken };
 }

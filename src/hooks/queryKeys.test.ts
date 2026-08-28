@@ -3,10 +3,16 @@ import { merchForgeQueryKeys } from "./queryKeys";
 
 describe("merchForgeQueryKeys", () => {
     it("scopes every key by businessId", () => {
-        expect(merchForgeQueryKeys.business("biz-a")).toEqual(["merchforge", "biz-a", "business"]);
+        expect(merchForgeQueryKeys.business("biz-a")).toEqual(["merchforge", "biz-a", "business", null]);
         expect(merchForgeQueryKeys.products("biz-a")).toEqual(["merchforge", "biz-a", "products", {}]);
         expect(merchForgeQueryKeys.product("biz-a", "p1")).toEqual(["merchforge", "biz-a", "products", "p1"]);
         expect(merchForgeQueryKeys.categories("biz-a")).toEqual(["merchforge", "biz-a", "categories"]);
+    });
+
+    it("produces a different business key for preview mode than for published", () => {
+        expect(merchForgeQueryKeys.business("biz-a")).not.toEqual(
+            merchForgeQueryKeys.business("biz-a", "preview-token")
+        );
     });
 
     it("produces different keys for different businesses given the same resource/params", () => {

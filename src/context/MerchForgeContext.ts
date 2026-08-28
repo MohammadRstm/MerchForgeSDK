@@ -21,6 +21,13 @@ export interface MerchForgeConfig {
  */
 export interface MerchForgeContextValue extends MerchForgeConfig {
     client: AxiosInstance;
+    /**
+     * Resolved once on mount (see previewMode.ts). When set, useBusiness() reads
+     * /storefront/preview instead of /storefront/business for the rest of the
+     * session, transparently to every template — template code never knows or cares
+     * which mode it's in.
+     */
+    previewToken: string | null;
 }
 
 export const MerchForgeContext = createContext<MerchForgeContextValue | null>(null);
