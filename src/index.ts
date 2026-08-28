@@ -14,6 +14,11 @@ export { useCategories } from "./hooks/useCategories";
 export { useCreateOrder } from "./hooks/useCreateOrder";
 export { useOrder } from "./hooks/useOrder";
 
+export { useCustomerAuth } from "./hooks/useCustomerAuth";
+export type { UseCustomerAuthResult } from "./hooks/useCustomerAuth";
+export { useCustomerProfile } from "./hooks/useCustomerProfile";
+export { useUpdateCustomerProfile } from "./hooks/useUpdateCustomerProfile";
+
 export type { Business } from "./types/business";
 export type { Domain } from "./types/domain";
 export type {
@@ -35,6 +40,11 @@ export type {
     CreateOrderInput,
     CreateOrderItemInput,
 } from "./types/order";
+export type {
+    Customer,
+    CustomerProfile,
+    UpdateCustomerProfileInput,
+} from "./types/customer";
 
 export {
     getMainImage,

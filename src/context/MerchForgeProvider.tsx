@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createApiClient } from "../api/client";
+import { CustomerAuthProvider } from "./CustomerAuthProvider";
 import { MerchForgeContext, type MerchForgeConfig } from "./MerchForgeContext";
 
 export interface MerchForgeProviderProps extends MerchForgeConfig {
@@ -24,7 +25,13 @@ export interface MerchForgeProviderProps extends MerchForgeConfig {
  * businessId as an entirely different set of cache entries — there is no code path
  * by which one business's cached data can be returned for another.
  */
-export function MerchForgeProvider({ apiUrl, businessId, children, queryClient }: MerchForgeProviderProps) {
+export function MerchForgeProvider({
+    apiUrl,
+    businessId,
+    platformUrl,
+    children,
+    queryClient,
+}: MerchForgeProviderProps) {
     if (!apiUrl) {
         throw new Error("<MerchForgeProvider> requires a non-empty apiUrl prop.");
     }
@@ -44,14 +51,16 @@ export function MerchForgeProvider({ apiUrl, businessId, children, queryClient }
     // Stable object reference so context consumers don't re-render just because
     // MerchForgeProvider itself re-rendered for an unrelated reason.
     const contextValue = useMemo(
-        () => ({ apiUrl, businessId, client: apiClient }),
-        [apiUrl, businessId, apiClient]
+        () => ({ apiUrl, businessId, platformUrl, client: apiClient }),
+        [apiUrl, businessId, platformUrl, apiClient]
     );
 
     return (
         <MerchForgeContext.Provider value={contextValue}>
             <QueryClientProvider client={client}>
-                {children}
+                <CustomerAuthProvider apiUrl={apiUrl} platformUrl={platformUrl} anonymousClient={apiClient}>
+                    {children}
+                </CustomerAuthProvider>
             </QueryClientProvider>
         </MerchForgeContext.Provider>
     );
