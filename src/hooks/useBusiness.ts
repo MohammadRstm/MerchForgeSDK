@@ -7,12 +7,16 @@ import { merchForgeQueryKeys } from "./queryKeys";
 
 /**
  * Public storefront information for the business configured on <MerchForgeProvider>.
+ *
+ * Transparently returns the draft (not the published data) when this page was
+ * opened in preview mode — see previewMode.ts. Template code never needs to branch
+ * on this; the response shape is identical either way.
  */
 export function useBusiness() {
-    const { client, businessId } = useApiClient();
+    const { client, businessId, previewToken } = useApiClient();
 
     return useQuery<Business, MerchForgeApiError>({
-        queryKey: merchForgeQueryKeys.business(businessId),
-        queryFn: () => getBusiness(client, businessId),
+        queryKey: merchForgeQueryKeys.business(businessId, previewToken),
+        queryFn: () => getBusiness(client, businessId, previewToken),
     });
 }

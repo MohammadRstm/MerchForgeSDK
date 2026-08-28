@@ -1,8 +1,10 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createApiClient } from "../api/client";
+import { BusinessSideEffects } from "./BusinessSideEffects";
 import { CustomerAuthProvider } from "./CustomerAuthProvider";
 import { MerchForgeContext, type MerchForgeConfig } from "./MerchForgeContext";
+import { resolvePreviewToken } from "./previewMode";
 
 export interface MerchForgeProviderProps extends MerchForgeConfig {
     children: ReactNode;
@@ -43,6 +45,10 @@ export function MerchForgeProvider({
     const [defaultQueryClient] = useState(() => new QueryClient());
     const client = queryClient ?? defaultQueryClient;
 
+    // Resolved once per mount, not re-checked on every render — a preview session,
+    // once entered, lasts for the page's lifetime (see previewMode.ts).
+    const [previewToken] = useState(() => resolvePreviewToken());
+
     // One Axios client per provider instance (recreated only if apiUrl changes),
     // shared by every hook in this subtree via context — not a module-level
     // singleton, so multiple providers never share connection state.
@@ -51,14 +57,15 @@ export function MerchForgeProvider({
     // Stable object reference so context consumers don't re-render just because
     // MerchForgeProvider itself re-rendered for an unrelated reason.
     const contextValue = useMemo(
-        () => ({ apiUrl, businessId, platformUrl, client: apiClient }),
-        [apiUrl, businessId, platformUrl, apiClient]
+        () => ({ apiUrl, businessId, platformUrl, client: apiClient, previewToken }),
+        [apiUrl, businessId, platformUrl, apiClient, previewToken]
     );
 
     return (
         <MerchForgeContext.Provider value={contextValue}>
             <QueryClientProvider client={client}>
                 <CustomerAuthProvider apiUrl={apiUrl} platformUrl={platformUrl} anonymousClient={apiClient}>
+                    <BusinessSideEffects apiUrl={apiUrl} />
                     {children}
                 </CustomerAuthProvider>
             </QueryClientProvider>

@@ -19,7 +19,7 @@ export type { UseCustomerAuthResult } from "./hooks/useCustomerAuth";
 export { useCustomerProfile } from "./hooks/useCustomerProfile";
 export { useUpdateCustomerProfile } from "./hooks/useUpdateCustomerProfile";
 
-export type { Business } from "./types/business";
+export type { Business, BusinessHours, BusinessHoursDay, SocialLinks } from "./types/business";
 export type { Domain } from "./types/domain";
 export type {
     Product,

@@ -8,8 +8,11 @@ import type { ProductsQuery } from "../types/product";
  * whatever query keys the host app uses for its own, unrelated data.
  */
 export const merchForgeQueryKeys = {
-    business: (businessId: string) =>
-        ["merchforge", businessId, "business"] as const,
+    // previewToken is part of the key so switching in/out of preview mode within
+    // the same session is a genuinely different cache entry, never a stale mix of
+    // published and draft content.
+    business: (businessId: string, previewToken: string | null = null) =>
+        ["merchforge", businessId, "business", previewToken] as const,
 
     products: (businessId: string, query: ProductsQuery = {}) =>
         ["merchforge", businessId, "products", query] as const,
