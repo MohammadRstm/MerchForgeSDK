@@ -25,4 +25,10 @@ export const merchForgeQueryKeys = {
 
     order: (businessId: string, orderId: string) =>
         ["merchforge", businessId, "orders", orderId] as const,
+
+    // Deliberately NOT businessId-scoped: a Customer is not business-scoped, the same
+    // profile is reused across every storefront, so keying by customerId alone is
+    // both correct and lets the same cache entry serve any storefront's provider tree.
+    customerProfile: (customerId: string) =>
+        ["merchforge", "customer", customerId, "profile"] as const,
 };
