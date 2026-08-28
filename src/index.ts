@@ -11,6 +11,8 @@ export { useProducts } from "./hooks/useProducts";
 export { useProduct } from "./hooks/useProduct";
 export { useRelatedProducts } from "./hooks/useRelatedProducts";
 export { useCategories } from "./hooks/useCategories";
+export { useCreateOrder } from "./hooks/useCreateOrder";
+export { useOrder } from "./hooks/useOrder";
 
 export type { Business } from "./types/business";
 export type { Domain } from "./types/domain";
@@ -25,6 +27,14 @@ export type {
 } from "./types/product";
 export type { Category } from "./types/category";
 export type { PagedResult, PagedQuery } from "./types/pagination";
+export type {
+    Order,
+    OrderItem,
+    OrderStatus,
+    PaymentStatus,
+    CreateOrderInput,
+    CreateOrderItemInput,
+} from "./types/order";
 
 export {
     getMainImage,
