@@ -4,6 +4,7 @@ import { useApiClient } from "../api/client";
 import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
 import type { Order } from "../types/order";
 import { merchForgeQueryKeys } from "./queryKeys";
+import { shouldRetryQuery } from "./shouldRetryQuery";
 
 /**
  * A single order, for a confirmation or order-tracking page. Pass the id from the
@@ -16,5 +17,6 @@ export function useOrder(orderId: string | undefined) {
         queryKey: merchForgeQueryKeys.order(businessId, orderId ?? ""),
         queryFn: () => getOrder(client, businessId, orderId!),
         enabled: !!orderId,
+        retry: shouldRetryQuery,
     });
 }

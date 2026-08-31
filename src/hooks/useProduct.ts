@@ -4,6 +4,7 @@ import { useApiClient } from "../api/client";
 import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
 import type { ProductDetail } from "../types/product";
 import { merchForgeQueryKeys } from "./queryKeys";
+import { shouldRetryQuery } from "./shouldRetryQuery";
 
 /**
  * A single product by id, including its description and metadata, for the business
@@ -16,5 +17,6 @@ export function useProduct(productId: string) {
         queryKey: merchForgeQueryKeys.product(businessId, productId),
         queryFn: () => getProduct(client, businessId, productId),
         enabled: !!productId,
+        retry: shouldRetryQuery,
     });
 }
