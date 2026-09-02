@@ -41,7 +41,12 @@ export const productSchema = z.object({
 });
 
 export const productDetailSchema = productSchema.extend({
-    description: z.string(),
+    // Nullable, not just optional: Product.Description is a nullable column on the
+    // backend (most products, including every one seeded by the demo-business
+    // tooling, never set one) and the API returns a literal `null`, not an omitted
+    // key. Requiring z.string() here made getProduct() throw on any such product,
+    // which surfaced as the product-detail page silently showing nothing.
+    description: z.string().nullable(),
 });
 
 export const productsSchema = z.array(productSchema);

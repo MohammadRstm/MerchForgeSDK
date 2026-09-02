@@ -64,9 +64,9 @@ export interface Product {
     createdAt: string;
 }
 
-/** A single product, including its full description. */
+/** A single product, including its full description. Null when the merchant hasn't written one. */
 export interface ProductDetail extends Product {
-    description: string;
+    description: string | null;
 }
 
 export type ProductSortField = "CreatedAt" | "Title" | "Price";
