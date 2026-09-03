@@ -14,6 +14,11 @@ export { useCategories } from "./hooks/useCategories";
 export { useCreateOrder } from "./hooks/useCreateOrder";
 export { useOrder } from "./hooks/useOrder";
 
+export { useProductReviews } from "./hooks/useProductReviews";
+export { useProductReviewSummary } from "./hooks/useProductReviewSummary";
+export { useMyProductReview } from "./hooks/useMyProductReview";
+export { useSubmitProductReview } from "./hooks/useSubmitProductReview";
+
 export { useCustomerAuth } from "./hooks/useCustomerAuth";
 export type { UseCustomerAuthResult } from "./hooks/useCustomerAuth";
 export { useCustomerProfile } from "./hooks/useCustomerProfile";
@@ -45,6 +50,14 @@ export type {
     CustomerProfile,
     UpdateCustomerProfileInput,
 } from "./types/customer";
+export type {
+    ProductReview,
+    ProductReviewSummary,
+    MyProductReview,
+    ProductReviewEligibility,
+    CreateProductReviewInput,
+    ProductReviewsQuery,
+} from "./types/review";
 
 export {
     getMainImage,

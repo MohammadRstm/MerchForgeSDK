@@ -36,6 +36,8 @@ const validProduct = {
     saleEndsAt: null,
     category: validCategory,
     metadata: { colors: ["Black", "White"], sizes: ["40", "41"], waterproof: true },
+    averageRating: 4.5,
+    reviewCount: 2,
     createdAt: "2026-02-01T10:00:00Z",
 };
 

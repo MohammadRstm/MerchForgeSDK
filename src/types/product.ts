@@ -61,6 +61,14 @@ export interface Product {
     saleEndsAt: string | null;
     category: ProductCategory;
     metadata: ProductMetadata | null;
+    /**
+     * Mean of this product's visible reviews, rounded to two places. Null when it has
+     * none — a real average is never 0, so null is what tells "not rated yet" apart
+     * from a genuinely low score.
+     */
+    averageRating: number | null;
+    /** How many visible reviews the average is drawn from. Hidden ones don't count. */
+    reviewCount: number;
     createdAt: string;
 }
 

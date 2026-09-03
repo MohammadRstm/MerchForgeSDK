@@ -37,6 +37,10 @@ export const productSchema = z.object({
     saleEndsAt: z.iso.datetime().nullable(),
     category: productCategorySchema,
     metadata: productMetadataSchema.nullable(),
+    // Null when the product has no visible reviews — never 0, so "not rated yet" is
+    // distinguishable from a genuinely bad score.
+    averageRating: z.number().nullable(),
+    reviewCount: z.number(),
     createdAt: z.iso.datetime(),
 });
 
