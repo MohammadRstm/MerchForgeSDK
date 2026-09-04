@@ -37,11 +37,20 @@ export const productSchema = z.object({
     saleEndsAt: z.iso.datetime().nullable(),
     category: productCategorySchema,
     metadata: productMetadataSchema.nullable(),
+    // Null when the product has no visible reviews — never 0, so "not rated yet" is
+    // distinguishable from a genuinely bad score.
+    averageRating: z.number().nullable(),
+    reviewCount: z.number(),
     createdAt: z.iso.datetime(),
 });
 
 export const productDetailSchema = productSchema.extend({
-    description: z.string(),
+    // Nullable, not just optional: Product.Description is a nullable column on the
+    // backend (most products, including every one seeded by the demo-business
+    // tooling, never set one) and the API returns a literal `null`, not an omitted
+    // key. Requiring z.string() here made getProduct() throw on any such product,
+    // which surfaced as the product-detail page silently showing nothing.
+    description: z.string().nullable(),
 });
 
 export const productsSchema = z.array(productSchema);

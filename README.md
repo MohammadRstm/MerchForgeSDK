@@ -31,8 +31,12 @@ business/store configuration, domain-scoped categories, product search, filterin
 sorting, pagination, product detail, related products, and flexible product
 metadata.
 
-Not implemented anywhere yet: cart, checkout, orders, payments, customer accounts,
-reviews, wishlists, shipping, inventory, coupons.
+Orders, customer accounts, and product reviews are implemented too — order
+placement and lookup, the hosted customer login/silent-refresh handoff, and reviews
+(a required 1-5 rating plus an optional comment, restricted to verified purchasers).
+
+Not implemented anywhere yet: cart state (storefronts own their own), payments,
+wishlists, shipping, inventory, coupons.
 
 ## Install (local development)
 
@@ -206,6 +210,10 @@ ISO-8601 datetimes, and the `ApiErrorResponse` shape
 | `GET /api/storefront/products` | `getProducts` | `useProducts(query?)` |
 | `GET /api/storefront/products/{id}` | `getProduct` | `useProduct(id)` |
 | `GET /api/storefront/products/{id}/related` | `getRelatedProducts` | `useRelatedProducts(id, limit?)` |
+| `GET /api/storefront/products/{id}/reviews` | `getProductReviews` | `useProductReviews(id, query?)` |
+| `GET /api/storefront/products/{id}/reviews/summary` | `getProductReviewSummary` | `useProductReviewSummary(id)` |
+| `GET /api/storefront/products/{id}/reviews/me` | `getMyProductReview` | `useMyProductReview(id)` |
+| `POST /api/storefront/products/{id}/reviews` | `submitProductReview` | `useSubmitProductReview(id)` |
 
 ### `GET /api/storefront/business?businessId={id}`
 
@@ -278,6 +286,42 @@ Array of list-shaped products in the same category, excluding this one. `limit`
 defaults to 4 and is clamped to 20. An empty array is a normal result; an unknown
 product id is a `404`.
 
+
+### Reviews
+
+A review is a required 1-5 star rating plus an optional comment. Only customers who
+have actually ordered the product can post one — the API answers 409
+`REVIEW_REQUIRES_PURCHASE` otherwise — and each customer has at most one review per
+product, so `POST` is an upsert: submitting again edits their existing review rather
+than adding a second.
+
+Reviews a merchant has hidden never appear in the public list and are excluded from
+the average. `Product.averageRating` / `Product.reviewCount` carry the same aggregate
+on every product, so grids and headings do not need a separate request;
+`useProductReviewSummary` exists for the per-star histogram.
+
+`useMyProductReview` and `useSubmitProductReview` use the customer-authenticated
+client. `useMyProductReview` stays disabled while signed out rather than 401ing.
+Gate the form on `useCustomerAuth().isLoading` as well as `isAuthenticated` — during
+the initial silent refresh on page load `isAuthenticated` is still `false`, so a
+signed-in customer would otherwise see the signed-out state flash.
+
+```json
+// GET /reviews -> PagedResult<ProductReview>
+{ "id": "guid", "rating": 5, "comment": "string | null",
+  "authorDisplayName": "Mia S.", "createdAt": "iso" }
+
+// GET /reviews/summary -> ProductReviewSummary
+{ "averageRating": 4.5, "reviewCount": 2,
+  "ratingBreakdown": { "1": 0, "2": 0, "3": 0, "4": 1, "5": 1 } }
+
+// GET /reviews/me -> ProductReviewEligibility   (401 without a customer token)
+{ "canReview": true, "myReview": null }
+
+// POST /reviews  body { rating, comment? } -> MyProductReview
+{ "id": "guid", "rating": 4, "comment": null, "isHidden": false,
+  "createdAt": "iso", "updatedAt": "iso" }
+```
 ### CORS
 
 The storefront API uses a dedicated anonymous, credential-free CORS policy that

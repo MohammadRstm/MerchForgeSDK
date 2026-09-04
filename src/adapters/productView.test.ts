@@ -33,6 +33,8 @@ const product = (overrides: Partial<Product> = {}): Product => ({
     tags: [],
     saleEndsAt: null,
     category: { id: "c1", name: "Shoes", slug: "shoes" },
+    averageRating: null,
+    reviewCount: 0,
     metadata: null,
     createdAt: "2026-01-01T00:00:00Z",
     ...overrides,

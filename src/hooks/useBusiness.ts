@@ -4,6 +4,7 @@ import { useApiClient } from "../api/client";
 import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
 import type { Business } from "../types/business";
 import { merchForgeQueryKeys } from "./queryKeys";
+import { shouldRetryQuery } from "./shouldRetryQuery";
 
 /**
  * Public storefront information for the business configured on <MerchForgeProvider>.
@@ -18,5 +19,6 @@ export function useBusiness() {
     return useQuery<Business, MerchForgeApiError>({
         queryKey: merchForgeQueryKeys.business(businessId, previewToken),
         queryFn: () => getBusiness(client, businessId, previewToken),
+        retry: shouldRetryQuery,
     });
 }

@@ -1,4 +1,5 @@
 import type { ProductsQuery } from "../types/product";
+import type { ProductReviewsQuery } from "../types/review";
 
 /**
  * Centralized query keys, every one scoped by businessId. Never key SDK queries as
@@ -25,6 +26,19 @@ export const merchForgeQueryKeys = {
 
     categories: (businessId: string) =>
         ["merchforge", businessId, "categories"] as const,
+
+    productReviews: (businessId: string, productId: string, query: ProductReviewsQuery = {}) =>
+        ["merchforge", businessId, "products", productId, "reviews", query] as const,
+
+    productReviewSummary: (businessId: string, productId: string) =>
+        ["merchforge", businessId, "products", productId, "reviews", "summary"] as const,
+
+    // Scoped by businessId and productId but not by customer id: the customer-
+    // authenticated client resolves "me" from the bearer token, and logging out clears
+    // the whole cache anyway, so adding an id here would only make the key harder to
+    // invalidate from the submit mutation.
+    myProductReview: (businessId: string, productId: string) =>
+        ["merchforge", businessId, "products", productId, "reviews", "me"] as const,
 
     order: (businessId: string, orderId: string) =>
         ["merchforge", businessId, "orders", orderId] as const,

@@ -5,6 +5,7 @@ import type { MerchForgeApiError } from "../errors/MerchForgeApiError";
 import type { PagedResult } from "../types/pagination";
 import type { Product, ProductsQuery } from "../types/product";
 import { merchForgeQueryKeys } from "./queryKeys";
+import { shouldRetryQuery } from "./shouldRetryQuery";
 
 /**
  * Paginated product catalog for the business configured on <MerchForgeProvider>.
@@ -18,5 +19,6 @@ export function useProducts(query: ProductsQuery = {}) {
     return useQuery<PagedResult<Product>, MerchForgeApiError>({
         queryKey: merchForgeQueryKeys.products(businessId, query),
         queryFn: () => getProducts(client, businessId, query),
+        retry: shouldRetryQuery,
     });
 }
